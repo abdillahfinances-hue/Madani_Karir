@@ -64,7 +64,18 @@ function stepTemplate(index) {
         <div class="choice-group row">
           <label class="choice-item"><input type="checkbox" name="wilayah_kerja" value="Kabupaten Asahan"> Kabupaten Asahan</label>
           <label class="choice-item"><input type="checkbox" name="wilayah_kerja" value="Kota Tanjungbalai"> Kota Tanjungbalai</label>
-          <label class="choice-item"><input type="checkbox" name="wilayah_kerja" value="Kabupaten Batu Bara"> Kabupaten Batu Bara</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Akun Media Sosial yang Dimiliki &amp; Sedang Aktif Digunakan <span class="req">*</span></label>
+        <textarea name="sosial_media" placeholder="cth. Instagram: @namaakun, TikTok: @namaakun, Facebook: Nama Akun" required></textarea>
+        <div class="hint">Tuliskan platform dan username/link akun yang masih aktif kamu pakai.</div>
+      </div>
+      <div class="field">
+        <label>Status Pernikahan <span class="req">*</span></label>
+        <div class="choice-group">
+          <label class="choice-item"><input type="radio" name="status_pernikahan" value="Belum Menikah (Single)" required> Belum Menikah (Single)</label>
+          <label class="choice-item"><input type="radio" name="status_pernikahan" value="Sudah Menikah"> Sudah Menikah</label>
         </div>
       </div>
     `;
@@ -402,7 +413,7 @@ function submitForm() {
     const waMessage = encodeURIComponent(
       `Halo Admin Madani Karir, saya ${formData.nama_lengkap || '-'} baru saja mendaftar sebagai tentor (${kategoriTerpilih}). Mohon info proses selanjutnya ya. Terima kasih.`
     );
-    document.getElementById("wa-confirm").href = `https://wa.me/6288201524358?text=${waMessage}`;
+    document.getElementById("wa-confirm").href = `https://wa.me/6282272136330?text=${waMessage}`;
   };
 
   if (GAS_URL === "GANTI_DENGAN_URL_APPS_SCRIPT") {
