@@ -409,11 +409,8 @@ function submitForm() {
     document.getElementById("step-container").style.display = "none";
     document.getElementById("success-panel").classList.add("show");
 
-    const kategoriTerpilih = (formData.kategori_program || []).join(', ') || '-';
-    const waMessage = encodeURIComponent(
-      `Halo Admin Madani Karir, saya ${formData.nama_lengkap || '-'} baru saja mendaftar sebagai tentor (${kategoriTerpilih}). Mohon info proses selanjutnya ya. Terima kasih.`
-    );
-    document.getElementById("wa-confirm").href = `https://wa.me/6282272136330?text=${waMessage}`;
+    // Link grup WhatsApp pelamar (bukan chat personal, jadi tidak ada pesan otomatis)
+    document.getElementById("wa-confirm").href = "https://chat.whatsapp.com/KdUKpnf8VytLYf1k6im2ZK?s=sh&p=a&ilr=1";
   };
 
   if (GAS_URL === "GANTI_DENGAN_URL_APPS_SCRIPT") {
