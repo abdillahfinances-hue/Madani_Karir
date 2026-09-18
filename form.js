@@ -1,16 +1,28 @@
 /* ===================================================
-   form.js — logic formulir pendaftaran tentor
-   5 Bagian sesuai PDF resmi Bimbel Madani
+   form.js — logic formulir pendaftaran
+   Mendukung 2 jenis pendaftaran (mode):
+   - "tentor"     : 5 Bagian sesuai PDF resmi Bimbel Madani
+   - "affiliator" : 5 Bagian khusus Affiliator Siswa
 =================================================== */
 
-/* Peta slug ?posisi= dari card lowongan -> kategori program */
+/* Peta slug ?posisi= dari card lowongan -> { mode, kategori } */
 const POSISI_MAP = {
-  "tentor-bahasa-inggris": "KBI",
-  "tentor-mengaji-pendidikan-islam": "KMPI",
-  "tentor-mata-pelajaran-umum": "KMPU"
+  "tentor-bahasa-inggris": { mode: "tentor", kategori: "KBI" },
+  "tentor-mengaji-pendidikan-islam": { mode: "tentor", kategori: "KMPI" },
+  "tentor-mata-pelajaran-umum": { mode: "tentor", kategori: "KMPU" },
+  "affiliator-siswa": { mode: "affiliator", kategori: "AFFILIATOR" }
 };
 
-const STEPS = [
+function getPosisiInfo() {
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get("posisi");
+  return POSISI_MAP[slug] || { mode: "tentor", kategori: null };
+}
+
+const POSISI_INFO = getPosisiInfo();
+const MODE = POSISI_INFO.mode; // "tentor" | "affiliator"
+
+const STEPS_TENTOR = [
   { key: "diri", label: "Data Diri" },
   { key: "akademik", label: "Pendidikan" },
   { key: "program", label: "Program" },
@@ -18,29 +30,21 @@ const STEPS = [
   { key: "operasional", label: "Komitmen" }
 ];
 
+const STEPS_AFFILIATOR = [
+  { key: "diri", label: "Data Diri" },
+  { key: "medsos", label: "Media Sosial" },
+  { key: "motivasi", label: "Pengalaman" },
+  { key: "kesiapan", label: "Kesiapan" },
+  { key: "komitmen", label: "Komitmen" }
+];
+
+const STEPS = MODE === "affiliator" ? STEPS_AFFILIATOR : STEPS_TENTOR;
+
 let currentStep = 0;
-const formData = { berkas: [] };
+const formData = { berkas: [], jenis_pendaftaran: MODE === "affiliator" ? "Affiliator" : "Tentor" };
 
-/* ===== Prefill dari query string ?posisi=... ===== */
-function getPosisiFromQuery() {
-  const params = new URLSearchParams(window.location.search);
-  const slug = params.get("posisi");
-  return POSISI_MAP[slug] || null;
-}
-
-/* ===== Stepper ===== */
-function renderStepper() {
-  const el = document.getElementById("stepper");
-  el.innerHTML = STEPS.map((s, i) => `
-    <div class="step ${i === currentStep ? 'active' : ''} ${i < currentStep ? 'done' : ''}">
-      <div class="dot">${i < currentStep ? '✓' : i + 1}</div>
-      <span>${s.label}</span>
-    </div>
-  `).join('');
-}
-
-/* ===== Templates per Bagian (sesuai PDF) ===== */
-function stepTemplate(index) {
+/* ===== Templates: MODE TENTOR (5 Bagian sesuai PDF) ===== */
+function stepTemplateTentor(index) {
   switch (STEPS[index].key) {
 
     case "diri": return `
@@ -205,6 +209,130 @@ function stepTemplate(index) {
   }
 }
 
+/* ===== Templates: MODE AFFILIATOR (5 Bagian khusus) ===== */
+function stepTemplateAffiliator(index) {
+  switch (STEPS[index].key) {
+
+    case "diri": return `
+      <h3>Bagian 1 — Data Diri Pendaftar</h3>
+      <p class="step-desc">Data ini dipakai tim rekrutmen untuk menghubungi kamu.</p>
+      <div class="field">
+        <label>Nama Lengkap <span class="req">*</span></label>
+        <input type="text" name="nama_lengkap" placeholder="Tuliskan nama lengkap kamu" required>
+      </div>
+      <div class="field">
+        <label>Nomor WhatsApp Aktif <span class="req">*</span></label>
+        <input type="tel" name="whatsapp" placeholder="08xxxxxxxxxx" required>
+        <div class="hint">Pastikan nomor terhubung dengan WhatsApp aktif.</div>
+      </div>
+      <div class="field">
+        <label>Domisili Saat Ini <span class="req">*</span></label>
+        <input type="text" name="alamat" placeholder="cth. Kisaran, Kabupaten Asahan" required>
+        <div class="hint">Cukup kota/kabupaten — karena Affiliator bisa kerja dari mana saja.</div>
+      </div>
+    `;
+
+    case "medsos": return `
+      <h3>Bagian 2 — Media Sosial &amp; Jangkauan</h3>
+      <p class="step-desc">Ini yang paling penting buat posisi Affiliator — pastikan diisi dengan jujur.</p>
+      <div class="field">
+        <label>Platform Media Sosial yang Aktif Digunakan <span class="req">*</span></label>
+        <div class="choice-group row">
+          <label class="choice-item"><input type="checkbox" name="platform_medsos" value="Instagram"> Instagram</label>
+          <label class="choice-item"><input type="checkbox" name="platform_medsos" value="TikTok"> TikTok</label>
+          <label class="choice-item"><input type="checkbox" name="platform_medsos" value="Facebook"> Facebook</label>
+          <label class="choice-item"><input type="checkbox" name="platform_medsos" value="WhatsApp Story"> WhatsApp Story</label>
+          <label class="choice-item"><input type="checkbox" name="platform_medsos" value="Lainnya"> Lainnya</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Username / Link Akun Aktif <span class="req">*</span></label>
+        <textarea name="username_medsos" placeholder="cth. Instagram: @namaakun, TikTok: @namaakun" required></textarea>
+      </div>
+      <div class="field">
+        <label>Perkiraan Jumlah Followers / Reach <span class="req">*</span></label>
+        <div class="choice-group">
+          <label class="choice-item"><input type="radio" name="followers" value="Di bawah 500" required> Di bawah 500</label>
+          <label class="choice-item"><input type="radio" name="followers" value="500 – 2.000"> 500 – 2.000</label>
+          <label class="choice-item"><input type="radio" name="followers" value="2.000 – 10.000"> 2.000 – 10.000</label>
+          <label class="choice-item"><input type="radio" name="followers" value="Di atas 10.000"> Di atas 10.000</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Frekuensi Posting / Update Status <span class="req">*</span></label>
+        <div class="choice-group">
+          <label class="choice-item"><input type="radio" name="frekuensi_posting" value="Setiap hari" required> Setiap hari</label>
+          <label class="choice-item"><input type="radio" name="frekuensi_posting" value="3-5 kali seminggu"> 3–5 kali seminggu</label>
+          <label class="choice-item"><input type="radio" name="frekuensi_posting" value="1-2 kali seminggu"> 1–2 kali seminggu</label>
+          <label class="choice-item"><input type="radio" name="frekuensi_posting" value="Jarang"> Jarang</label>
+        </div>
+      </div>
+    `;
+
+    case "motivasi": return `
+      <h3>Bagian 3 — Pengalaman &amp; Motivasi</h3>
+      <p class="step-desc">Ceritakan sedikit tentang dirimu.</p>
+      <div class="field">
+        <label>Pengalaman Promosi / Jualan / Affiliate Sebelumnya <span class="opt">(opsional)</span></label>
+        <textarea name="pengalaman_promosi" placeholder="cth. pernah jadi reseller, affiliate TikTok Shop, admin toko online, dll"></textarea>
+      </div>
+      <div class="field">
+        <label>Alasan Tertarik Jadi Affiliator Bimbel Madani <span class="req">*</span></label>
+        <textarea name="alasan_affiliator" placeholder="Ceritakan kenapa kamu tertarik gabung program ini" required></textarea>
+      </div>
+    `;
+
+    case "kesiapan": return `
+      <h3>Bagian 4 — Kesiapan Kerja</h3>
+      <p class="step-desc">Biar tim tau kapasitas waktu kamu untuk promosi.</p>
+      <div class="field">
+        <label>Status Saat Ini <span class="req">*</span></label>
+        <div class="choice-group">
+          <label class="choice-item"><input type="radio" name="status_saat_ini" value="Mahasiswa Aktif" required> Mahasiswa Aktif</label>
+          <label class="choice-item"><input type="radio" name="status_saat_ini" value="Karyawan"> Karyawan</label>
+          <label class="choice-item"><input type="radio" name="status_saat_ini" value="Freelancer"> Freelancer</label>
+          <label class="choice-item"><input type="radio" name="status_saat_ini" value="Ibu Rumah Tangga"> Ibu Rumah Tangga</label>
+          <label class="choice-item"><input type="radio" name="status_saat_ini" value="Lainnya"> Lainnya</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Ketersediaan Waktu untuk Promosi per Minggu <span class="req">*</span></label>
+        <div class="choice-group">
+          <label class="choice-item"><input type="radio" name="waktu_promosi" value="Di bawah 5 jam/minggu" required> Di bawah 5 jam/minggu</label>
+          <label class="choice-item"><input type="radio" name="waktu_promosi" value="5-10 jam/minggu"> 5–10 jam/minggu</label>
+          <label class="choice-item"><input type="radio" name="waktu_promosi" value="Di atas 10 jam/minggu"> Di atas 10 jam/minggu</label>
+        </div>
+      </div>
+    `;
+
+    case "komitmen": return `
+      <h3>Bagian 5 — Komitmen &amp; Berkas</h3>
+      <p class="step-desc">Langkah terakhir sebelum kirim pendaftaran.</p>
+      <div class="field">
+        <label>Pernyataan Integritas &amp; Komitmen <span class="req">*</span></label>
+        <select name="pernyataan_integritas" required>
+          <option value="">— Pilih pernyataan —</option>
+          <option value="Setuju">Saya bersedia melakukan promosi secara jujur, tidak menyebarkan informasi palsu, dan bekerja sama dengan baik dengan tim Bimbel Madani.</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Unggah Berkas (KTP) <span class="req">*</span></label>
+        <div class="upload-box" id="upload-box">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+          <div class="up-title">Klik untuk unggah berkas</div>
+          <div class="up-sub">KTP wajib. Boleh tambah screenshot insight/followers — PDF/JPG/PNG, maks 10MB/file</div>
+        </div>
+        <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png" style="display:none">
+        <div class="file-list" id="file-list"></div>
+      </div>
+    `;
+  }
+}
+
+function stepTemplate(index) {
+  return MODE === "affiliator" ? stepTemplateAffiliator(index) : stepTemplateTentor(index);
+}
+
 /* ===== Render step + nav ===== */
 function renderStep() {
   renderStepper();
@@ -212,9 +340,9 @@ function renderStep() {
   attachStepBehaviors();
   restoreFieldValues();
 
-  // Prefill kategori program dari query ?posisi= hanya saat pertama kali sampai di Bagian 3
-  if (STEPS[currentStep].key === "program" && !formData._posisiApplied) {
-    const kategori = getPosisiFromQuery();
+  // Prefill kategori program (khusus mode tentor) dari query ?posisi= saat sampai di Bagian 3
+  if (MODE === "tentor" && STEPS[currentStep].key === "program" && !formData._posisiApplied) {
+    const kategori = POSISI_INFO.kategori;
     if (kategori) {
       const cb = document.querySelector(`input[name="kategori_program"][value="${kategori}"]`);
       if (cb) {
@@ -245,7 +373,6 @@ function syncChoiceHighlight(input) {
   const item = input.closest('.choice-item');
   if (!item) return;
   if (input.type === 'radio') {
-    // uncheck highlight on sibling radios in the same group
     document.querySelectorAll(`input[name="${input.name}"]`).forEach(r => {
       const label = r.closest('.choice-item');
       if (label) label.classList.toggle('is-checked', r.checked);
@@ -256,7 +383,6 @@ function syncChoiceHighlight(input) {
 }
 
 function attachStepBehaviors() {
-  // highlight state untuk semua checkbox & radio di dalam .choice-item
   document.querySelectorAll('.choice-item input[type="checkbox"], .choice-item input[type="radio"]').forEach(input => {
     syncChoiceHighlight(input);
     input.addEventListener('change', () => syncChoiceHighlight(input));
@@ -287,7 +413,7 @@ function readFileAsBase64_(file) {
   }
   const reader = new FileReader();
   reader.onload = () => {
-    const base64 = reader.result.split(',')[1]; // buang prefix "data:mime;base64,"
+    const base64 = reader.result.split(',')[1];
     formData.berkas.push({ name: file.name, mimeType: file.type, data: base64 });
     renderFileList();
   };
@@ -396,11 +522,9 @@ function attachNavHandlers() {
 
 /* ===== Submit ===== */
 function submitForm() {
-  // Ganti URL di bawah dengan Web App URL Google Apps Script kamu
-  // (lihat SETUP-BACKEND.md untuk cara deploy)
   const GAS_URL = "https://script.google.com/macros/s/AKfycbyEqZzIFiQ60-EklBabAc_7PiMB3dad6A6I-gH9UtN2vHIXjbIhTCanaB23DYknnwUP/exec";
 
-  formData.posisi_dilamar = getPosisiFromQuery() || (formData.kategori_program || []).join(', ') || '-';
+  formData.posisi_dilamar = POSISI_INFO.kategori || (formData.kategori_program || []).join(', ') || '-';
 
   const submitBtn = document.getElementById('btn-next');
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Mengirim...'; }
@@ -408,8 +532,6 @@ function submitForm() {
   const finish = () => {
     document.getElementById("step-container").style.display = "none";
     document.getElementById("success-panel").classList.add("show");
-
-    // Link grup WhatsApp pelamar (bukan chat personal, jadi tidak ada pesan otomatis)
     document.getElementById("wa-confirm").href = "https://chat.whatsapp.com/KdUKpnf8VytLYf1k6im2ZK?s=sh&p=a&ilr=1";
   };
 
